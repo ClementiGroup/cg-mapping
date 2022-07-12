@@ -1,14 +1,40 @@
-# cg-mapping
-Implementation of methods to compute the optimal mapping strategies.
-Methods include
+# CG-Mapping
+## _The quest for the optimal mapping_
 
-(1) Analytical Mapping Entropy
+[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
 
-(2) VAMP 
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
-(3) Vibrational Power
 
-(4)
+## Features
 
-Analytical derivations for a gaussian network model where applicable are shown.
- 
+- Analytical Mapping Entropy
+- Vibrational Power
+- Variational Approach to Markov Processes
+- Reconstruction Error
+- 
+
+Accompanying code to XXX
+If you use please cite XXX
+
+
+## Installation
+
+Library dependencies
+
+```sh
+numpy
+networkx
+matplotlib.pyplot 
+typing
+```
+
+
+
+## Development
+
+Want to contribute? Great!
+
+
+## License
+
