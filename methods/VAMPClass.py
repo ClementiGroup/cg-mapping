@@ -14,7 +14,7 @@ class VAMP:
         kbT: int = 1,
         n_beads: int = 2,
         lagtimes: List = None,
-        dt: float = 0.005,
+        dt: float = 0.001,
     ):
         """ """
         assert len(np.shape(kirchoff_matrix)) == 2
@@ -31,7 +31,7 @@ class VAMP:
         self.eigvals = eigvals
         self.eigvecs = eigvecs.T
         self.eigval0 = self.eigvals[0]
-        self.eigvec0 = self.eigvecs[:, 0]
+        self.eigvec0 = self.eigvecs[0]
 
     def compute_vamp(self, lagtime):
         """
