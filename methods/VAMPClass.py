@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from _utils import _mapping_combinations, _create_networkx
+from _methods_utils import _mapping_combinations, _create_networkx
 
 
 class VAMP:
@@ -73,6 +73,12 @@ class VAMP:
         Return vamp score for mappings and associated lagtime
         """
         return self._vamp_score, self._lagtime
+
+    def return_optimal_vamp_score(self):
+        '''
+            Pass back inds and score for best vamp mapping
+        '''
+        return max(self._vamp_score.items(), key=lambda x: x[1])
 
     def compute_omega_tau(self):
         """
