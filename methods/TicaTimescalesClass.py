@@ -42,7 +42,10 @@ class TICA(VAMP):
         return self._eigvals_sorted, self._eigves_sorted, self._lagtime
 
     def return_timescales(self):
-        """ """
+        """
+        Return tica timescales given eigvec/eigval
+        """
         eigvals, _, lagtime = self.return_eigvals_eigvecs()
         self._timescales = -lagtime / np.log(np.abs(eigvals))
-        return self._timescales
+        # Final timescale corresponds to full protein translocation
+        return self._timescales[:-1]

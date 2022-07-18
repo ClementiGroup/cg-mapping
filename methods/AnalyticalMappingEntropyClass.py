@@ -1,6 +1,11 @@
 import numpy as np
 from typing import List
-from _methods_utils import _mapping_combinations, _create_networkx
+from _methods_utils import (
+    _slicing_mapping_combinations,
+    _create_networkx,
+    _symmetric_mapping_combinations,
+    _find_all_averaged_mapping_combinations,
+)
 
 
 class AME:
@@ -8,12 +13,19 @@ class AME:
     TODO: Documentation
     """
 
+    _mapping_stratgies = {
+        "slice": _slicing_mapping_combinations,
+        "center": _symmetric_mapping_combinations,
+        "average": _find_all_averaged_mapping_combinations,
+    }
+
     def __init__(
         self,
         kirchoff_matrix: np.ndarray = None,
         kbT: int = 1,
         n_beads: int = 2,
         volume: float = 10,
+        mapping: str = "slice",
     ):
         """ """
         assert len(np.shape(kirchoff_matrix)) == 2
@@ -25,6 +37,7 @@ class AME:
         self.graph = _create_networkx(self.kirchoff_matrix)
         self.kbT = kbT
         self.volume = volume
+        self.mapping_strategy = self._mapping_stratgies[mapping]
 
         eigvals, eigvecs = np.linalg.eigh(self.kirchoff_matrix)
         self.eigvals = eigvals
@@ -42,15 +55,14 @@ class AME:
         """
 
         # Compute for all atom case
-        tk = np.product(self.eigvals[np.abs(self.eigvals)>1e-5])
+        tk = np.product(self.eigvals[np.abs(self.eigvals) > 1e-5])
         omega = np.trace(self.compute_square_fluc(self.kirchoff_matrix))
-        
 
-        mapping_matrices = _mapping_combinations(self.n_atoms, self.n_beads)
+        mapping_matrices = self.mapping_strategy(self.n_atoms, self.n_beads)
+        self._mapping_matrices = mapping_matrices
         self._ame_score = {}
         self._vp_score = {}
-        for mapping_matrix in mapping_matrices:
-            inds = tuple(np.nonzero(mapping_matrix)[1])
+        for i_m, mapping_matrix in enumerate(mapping_matrices):
 
             # Filter out free translation
             Jn = np.sqrt(self.n_atoms) * self.eigvec0.reshape([-1, 1])
@@ -78,14 +90,13 @@ class AME:
             #   First term is a constant that depends on bead resolution
             #   Second is what determines the best mapping
             #   Larger values imply better mapping schemes
-            ame_score = (
-                0.5*(self.n_atoms-self.n_beads)*(1+np.log(2*np.pi/self.kbT/self.volume**2)) 
-                + 0.5*(np.log(Tk)-np.log(tk))
-            )
+            ame_score = 0.5 * (self.n_atoms - self.n_beads) * (
+                1 + np.log(2 * np.pi / self.kbT / self.volume**2)
+            ) + 0.5 * (np.log(Tk) - np.log(tk))
             # Vibrational Power from Foley/Noid
             vp_score = np.trace(self.compute_square_fluc(cg_kirchoff)) / omega
-            self._ame_score[inds] = ame_score
-            self._vp_score[inds] = vp_score
+            self._ame_score[i_m] = ame_score
+            self._vp_score[i_m] = vp_score
 
     def return_vp_scores(self):
         """
@@ -98,25 +109,22 @@ class AME:
         Return ame score for mappings
         """
         return self._ame_score
-    
+
     def return_optimal_ame_score(self):
-        '''
-            Pass back inds and score for best ame mapping
-        '''
+        """
+        Pass back inds and score for best ame mapping
+        """
         return max(self._ame_score.items(), key=lambda x: x[1])
 
     def return_optimal_vp_score(self):
-        '''
-            Pass back inds and score for best vp mapping
-        '''
+        """
+        Pass back inds and score for best vp mapping
+        """
         return max(self._vp_score.items(), key=lambda x: x[1])
-    
 
     @staticmethod
     def compute_square_fluc(kirchoff_matrix):
-        """ 
-        
-        """
+        """ """
         inv_kappa = 0
         eigvals, eigvecs = np.linalg.eigh(kirchoff_matrix)
         eigvecs = eigvecs.T
