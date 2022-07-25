@@ -63,7 +63,7 @@ class AME:
         self._ame_score = {}
         self._vp_score = {}
         for i_m, mapping_matrix in enumerate(mapping_matrices):
-
+            
             # Filter out free translation
             Jn = np.sqrt(self.n_atoms) * self.eigvec0.reshape([-1, 1])
             JN = mapping_matrix @ Jn
@@ -93,8 +93,23 @@ class AME:
             ame_score = 0.5 * (self.n_atoms - self.n_beads) * (
                 1 + np.log(2 * np.pi / self.kbT / self.volume**2)
             ) + 0.5 * (np.log(Tk) - np.log(tk))
+
             # Vibrational Power from Foley/Noid
-            vp_score = np.trace(self.compute_square_fluc(cg_kirchoff)) / omega
+
+            #for average strategy include mass weighting (MW)
+            if self.mapping_strategy == self._mapping_stratgies['average']:
+                   MW=np.zeros((self.n_beads,self.n_beads))
+                   for i in range(0,len(mapping_matrix)):
+                       for j in range (0,len(mapping_matrix[i])):
+                           if mapping_matrix[i][j] >0:
+                              MW[i][i]+=1
+                       MW[i][i]=np.sqrt(1/MW[i][i])        
+                   vp_score = np.trace(self.compute_square_fluc(np.dot(MW,np.dot(cg_kirchoff,MW)))) / omega
+            
+           #for all other mapping strategies no mass weighting
+            else:
+               vp_score = np.trace(self.compute_square_fluc(cg_kirchoff)) / omega
+           
             self._ame_score[i_m] = ame_score
             self._vp_score[i_m] = vp_score
 
@@ -133,4 +148,5 @@ class AME:
                 continue
             eigvec = eigvec.reshape([-1, 1])
             inv_kappa += (1 / eigval) * eigvec @ eigvec.T
+
         return inv_kappa
