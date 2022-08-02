@@ -113,9 +113,10 @@ class AME:
                 effective_mass = np.zeros((self.n_beads, self.n_beads))
                 for ii in range(self.n_beads):
                     for jj in range(self.n_atoms):
-                        effective_mass[ii][ii] += (
-                            mapping_matrix[ii][jj] **2 /  self.masses[jj]
+                        effective_mass[ii][ii] +=  (
+                              mapping_matrix[ii][jj] **2 /  self.masses[jj] 
                         )
+                    effective_mass[ii][ii]=1/effective_mass[ii][ii]
                     effective_mass[ii][ii] = np.sqrt(1 / effective_mass[ii][ii])
                 vp_score = (
                     np.trace(
