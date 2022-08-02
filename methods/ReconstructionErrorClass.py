@@ -80,10 +80,11 @@ class RE:
         self,
         lr_linear: float = 1e-3,      # learning rate for the linear part
         lr_non_linear: float = 1e-3,  # learning rate for the non-linear part
-        max_epoch: int = 350,         
-        epoch_nonlinear: int = 120,   # the epoch start to include non-linear decoder
+        max_epoch: int = 401,         
+        epoch_nonlinear: int = 150,   # the epoch start to include non-linear decoder
         batch_size: int = 512,
         crossvalid: float = 0.2,      # ratio of data as test set 
+        loss_print: bool = True,      # whether print out the loss values during training
     ):
         if self.mode == "linear":
             assert max_epoch == epoch_nonlinear
@@ -100,7 +101,7 @@ class RE:
         for i_m, mapping_matrix in enumerate(mapping_matrices):
             optimizers = []
             decoders = self.init_decoder()
-            encoder = torch.Tensor(mapping_matrix)
+            encoder = torch.Tensor(mapping_matrix).to(self.device)
             for i, decoder in enumerate(decoders):
                 if i < 1:
                     optimizers.append(optim.Adam(list(decoder.parameters()), lr=lr_linear))
@@ -155,7 +156,7 @@ class RE:
                 loss_log_train.append(loss_epoch_train)
                 loss_log_test.append(loss_epoch_test)
         
-                if epoch%10 == 0:
+                if epoch%50 == 0 and loss_print:
                     print("epoch %d reconstruction %.3f validation %.3f" % (epoch, loss_epoch_train, loss_epoch_test))
         
             self.loss_trains[i_m] = loss_log_train
