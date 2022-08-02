@@ -26,6 +26,7 @@ class AME:
         n_beads: int = 2,
         volume: float = 10,
         mapping: str = "slice",
+        masses: np.ndarray = None,
     ):
         """ """
         assert len(np.shape(kirchoff_matrix)) == 2
@@ -37,6 +38,11 @@ class AME:
         self.graph = _create_networkx(self.kirchoff_matrix)
         self.kbT = kbT
         self.volume = volume
+        if masses is not None:
+            assert len(masses) == self.n_atoms
+            self.masses = masses
+        else:
+            self.masses = np.ones(self.n_atoms)
         self.mapping_strategy = self._mapping_stratgies[mapping]
 
         eigvals, eigvecs = np.linalg.eigh(self.kirchoff_matrix)
@@ -56,14 +62,20 @@ class AME:
 
         # Compute for all atom case
         tk = np.product(self.eigvals[np.abs(self.eigvals) > 1e-5])
-        omega = np.trace(self.compute_square_fluc(self.kirchoff_matrix))
+        all_atom_mass_matrix = np.zeros((self.n_atoms, self.n_atoms))
+        for i in range(0, self.n_atoms):
+            all_atom_mass_matrix[i][i] = np.sqrt(1 / self.masses[i])
+        omega = np.trace(
+            self.compute_square_fluc(
+                all_atom_mass_matrix @ self.kirchoff_matrix @ all_atom_mass_matrix
+            )
+        )
 
         mapping_matrices = self.mapping_strategy(self.n_atoms, self.n_beads)
         self._mapping_matrices = mapping_matrices
         self._ame_score = {}
         self._vp_score = {}
         for i_m, mapping_matrix in enumerate(mapping_matrices):
-
             # Filter out free translation
             Jn = np.sqrt(self.n_atoms) * self.eigvec0.reshape([-1, 1])
             JN = mapping_matrix @ Jn
@@ -93,8 +105,32 @@ class AME:
             ame_score = 0.5 * (self.n_atoms - self.n_beads) * (
                 1 + np.log(2 * np.pi / self.kbT / self.volume**2)
             ) + 0.5 * (np.log(Tk) - np.log(tk))
+
             # Vibrational Power from Foley/Noid
-            vp_score = np.trace(self.compute_square_fluc(cg_kirchoff)) / omega
+
+            # for average strategy include mass weighting
+            if self.mapping_strategy == self._mapping_stratgies["average"]:
+                effective_mass = np.zeros((self.n_beads, self.n_beads))
+                for ii in range(self.n_beads):
+                    for jj in range(self.n_atoms):
+                        effective_mass[ii][ii] +=  (
+                              mapping_matrix[ii][jj] **2 /  self.masses[jj] 
+                        )
+                    effective_mass[ii][ii]=1/effective_mass[ii][ii]
+                    effective_mass[ii][ii] = np.sqrt(1 / effective_mass[ii][ii])
+                vp_score = (
+                    np.trace(
+                        self.compute_square_fluc(
+                            effective_mass @ cg_kirchoff @ effective_mass
+                        )
+                    )
+                    / omega
+                )
+
+            # for all other mapping strategies no mass weighting
+            else:
+                vp_score = np.trace(self.compute_square_fluc(cg_kirchoff)) / omega
+
             self._ame_score[i_m] = ame_score
             self._vp_score[i_m] = vp_score
 
@@ -133,4 +169,5 @@ class AME:
                 continue
             eigvec = eigvec.reshape([-1, 1])
             inv_kappa += (1 / eigval) * eigvec @ eigvec.T
+
         return inv_kappa
