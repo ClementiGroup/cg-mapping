@@ -35,6 +35,7 @@ class RE:
         self.n_beads = n_beads
         self.device = device
         self.mode = mode
+        np.random.shuffle(traj)
         self.traj = traj
         self.n_atoms = np.shape(traj)[1]
         self.dim = np.shape(traj)[2]
@@ -79,9 +80,9 @@ class RE:
     def train_RE(
         self,
         lr_linear: float = 1e-3,      # learning rate for the linear part
-        lr_non_linear: float = 1e-3,  # learning rate for the non-linear part
-        max_epoch: int = 401,         
-        epoch_nonlinear: int = 150,   # the epoch start to include non-linear decoder
+        lr_non_linear: float = 2e-4,  # learning rate for the non-linear part
+        max_epoch: int = 451,         
+        epoch_nonlinear: int = 200,   # the epoch start to include non-linear decoder
         batch_size: int = 512,
         crossvalid: float = 0.2,      # ratio of data as test set 
         loss_print: bool = True,      # whether print out the loss values during training
