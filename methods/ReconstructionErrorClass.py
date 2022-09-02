@@ -65,7 +65,7 @@ class RE:
         batch_size_train = batch_size
         batch_size_test = int(batch_size_train * crossvalid / (1 - crossvalid))
 
-        cut_point = int(self.traj.shape[0] * crossvalid)
+        cut_point = int(self.traj.shape[0] * (1 - crossvalid))
         traj_train = self.traj[0:cut_point,:,:]
         traj_test = self.traj[cut_point::,:,:]
 
