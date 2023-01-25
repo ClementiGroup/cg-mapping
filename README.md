@@ -14,8 +14,11 @@
 - Reconstruction Error
 - 
 
-Accompanying code to XXX
-If you use please cite XXX
+Accompanying code: Slicing and Dicing: Optimal Coarse-Grained Representation to Preserve Molecular Kinetics
+If you use please cite 
+Slicing and Dicing: Optimal Coarse-Grained Representation to Preserve Molecular Kinetics
+Wangfei Yang, Clark Templeton, David Rosenberger, Andreas Bittracher, Feliks Nüske, Frank Noé, and Cecilia Clementi
+ACS Central Science DOI: 10.1021/acscentsci.2c01200
 
 
 ## Installation
